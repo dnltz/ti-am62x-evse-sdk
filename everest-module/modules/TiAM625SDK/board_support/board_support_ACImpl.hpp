@@ -8,7 +8,7 @@
 // template version 3
 //
 
-#include <generated/interfaces/board_support_AC/Implementation.hpp>
+#include <generated/interfaces/evse_board_support/Implementation.hpp>
 
 #include "../TiAM625SDK.hpp"
 
@@ -21,11 +21,11 @@ namespace board_support {
 
 struct Conf {};
 
-class board_support_ACImpl : public board_support_ACImplBase {
+class board_support_ACImpl : public evse_board_supportImplBase {
 public:
     board_support_ACImpl() = delete;
     board_support_ACImpl(Everest::ModuleAdapter* ev, const Everest::PtrContainer<TiAM625SDK>& mod, Conf& config) :
-        board_support_ACImplBase(ev, "board_support"), mod(mod), config(config){};
+        evse_board_supportImplBase(ev, "board_support"), mod(mod), config(config){};
 
     // ev@8ea32d28-373f-4c90-ae5e-b4fcc74e2a61:v1
     // insert your public definitions here
@@ -33,18 +33,17 @@ public:
 
 protected:
     // command handler functions (virtual)
-    virtual void handle_setup(bool& three_phases, bool& has_ventilation, std::string& country_code,
-                              bool& rcd_enabled) override;
-    virtual types::board_support::HardwareCapabilities handle_get_hw_capabilities() override;
+    virtual void handle_setup(bool& three_phases, bool& has_ventilation, std::string& country_code) override;
+    virtual types::evse_board_support::HardwareCapabilities handle_get_hw_capabilities() override;
     virtual void handle_enable(bool& value) override;
     virtual void handle_pwm_on(double& value) override;
     virtual void handle_pwm_off() override;
     virtual void handle_pwm_F() override;
-    virtual void handle_allow_power_on(bool& value) override;
-    virtual bool handle_force_unlock() override;
-    virtual void handle_switch_three_phases_while_charging(bool& value) override;
+    virtual void handle_allow_power_on(types::evse_board_support::PowerOnOff& value) override;
+    virtual void handle_ac_switch_three_phases_while_charging(bool& value) override;
     virtual void handle_evse_replug(int& value) override;
-    virtual double handle_read_pp_ampacity() override;
+    virtual types::board_support_common::ProximityPilot handle_ac_read_pp_ampacity() override;
+    virtual void handle_ac_set_overcurrent_limit_A(double& value) override;
 
     // ev@d2d1847a-7b88-41dd-ad07-92785f06f5c4:v1
     // insert your protected definitions here

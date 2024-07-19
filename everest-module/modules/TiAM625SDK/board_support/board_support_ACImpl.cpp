@@ -116,45 +116,65 @@ void board_support_ACImpl::ready() {
 
 void board_support_ACImpl::handle_low_to_high_message(const LowToHigh& in) {
     auto convert = [](IEC61851Event event) {
-        using ET = types::board_support::Event;
+        using ET = types::board_support_common::Event;
         switch (event) {
         case IEC61851Event_CAR_PLUGGED_IN:
-            return ET::CarPluggedIn;
+            //return ET::B;
+            return (types::board_support_common::BspEvent){.event = ET::B};
         case IEC61851Event_CAR_REQUESTED_POWER:
-            return ET::CarRequestedPower;
+            //return ET::C;
+            return (types::board_support_common::BspEvent){.event = ET::C};
         case IEC61851Event_CAR_REQUESTED_STOP_POWER:
-            return ET::CarRequestedStopPower;
+            //return ET::A;
+            return (types::board_support_common::BspEvent){.event = ET::A};
         case IEC61851Event_CAR_UNPLUGGED:
-            return ET::CarUnplugged;
-        case IEC61851Event_EF_TO_BCD:
-            return ET::EFtoBCD;
-        case IEC61851Event_ERROR_DF:
-            return ET::ErrorDF;
+            //return ET::A;
+            return (types::board_support_common::BspEvent){.event = ET::A};
         case IEC61851Event_ERROR_E:
-            return ET::ErrorE;
-        case IEC61851Event_ERROR_OVER_CURRENT:
-            return ET::ErrorOverCurrent;
-        case IEC61851Event_ERROR_RCD:
-            return ET::ErrorRCD;
-        case IEC61851Event_ERROR_RELAIS:
-            return ET::ErrorRelais;
-        case IEC61851Event_ERROR_VENTILATION_NOT_AVAILABLE:
-            return ET::ErrorVentilationNotAvailable;
-        case IEC61851Event_EVSE_REPLUG_FINISHED:
-            return ET::EvseReplugFinished;
-        case IEC61851Event_EVSE_REPLUG_STARTED:
-            return ET::EvseReplugStarted;
-        case IEC61851Event_BCD_TO_EF:
-            return ET::BCDtoEF;
-        case IEC61851Event_PERMANENT_FAULT:
-            return ET::PermanentFault;
-        case IEC61851Event_POWER_OFF:
-            return ET::PowerOff;
+            //return ET::E;
+            return (types::board_support_common::BspEvent){.event = ET::E};
         case IEC61851Event_POWER_ON:
-            return ET::PowerOn;
+            //return ET::PowerOn;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOn};
+        case IEC61851Event_POWER_OFF:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_EVSE_REPLUG_STARTED:
+            //return ET::EvseReplugStarted;
+            return (types::board_support_common::BspEvent){.event = ET::EvseReplugStarted};
+        case IEC61851Event_EVSE_REPLUG_FINISHED:
+            //return ET::EvseReplugFinished;
+            return (types::board_support_common::BspEvent){.event = ET::EvseReplugFinished};
+
+        case IEC61851Event_EF_TO_BCD:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_ERROR_DF:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_ERROR_OVER_CURRENT:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_ERROR_RCD:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_ERROR_RELAIS:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_ERROR_VENTILATION_NOT_AVAILABLE:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_BCD_TO_EF:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+        case IEC61851Event_PERMANENT_FAULT:
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
+
         default:
             // FIXME (aw): what should be the proper default behavior?
-            return ET::PermanentFault;
+            //return ET::PowerOff;
+            return (types::board_support_common::BspEvent){.event = ET::PowerOff};
         }
     };
 
@@ -171,17 +191,16 @@ void board_support_ACImpl::handle_low_to_high_message(const LowToHigh& in) {
     }
 }
 
-void board_support_ACImpl::handle_setup(bool& three_phases, bool& has_ventilation, std::string& country_code,
-                                        bool& rcd_enabled){
+void board_support_ACImpl::handle_setup(bool& three_phases, bool& has_ventilation, std::string& country_code){
     // FIXME (aw): what can be done here?
     // has_ventilation, country_code and rcd_enabled could be passed on to the M4 here.
     // three_phases is irrelevant as the HW cannot switch between single phase and three phase.
 };
 
-types::board_support::HardwareCapabilities board_support_ACImpl::handle_get_hw_capabilities() {
+types::evse_board_support::HardwareCapabilities board_support_ACImpl::handle_get_hw_capabilities() {
     // In a real world scenario it would be better to query them from the power path hardware,
     // on TIDA we cannot.
-    types::board_support::HardwareCapabilities caps;
+    types::evse_board_support::HardwareCapabilities caps;
 
     caps.max_current_A_import = 16;
     caps.max_current_A_export = 0;
@@ -227,20 +246,15 @@ void board_support_ACImpl::handle_pwm_F() {
     link.push_message(out);
 };
 
-void board_support_ACImpl::handle_allow_power_on(bool& value) {
+void board_support_ACImpl::handle_allow_power_on(types::evse_board_support::PowerOnOff& value) {
     HighToLow out = HighToLow_init_zero;
 
     out.which_message = HighToLow_allow_power_on_tag;
-    out.message.allow_power_on = value;
+    out.message.allow_power_on = value.allow_power_on;
     link.push_message(out);
 };
 
-bool board_support_ACImpl::handle_force_unlock() {
-    // locking motor is not connected as of now, so we cannot do anything here.
-    return true;
-};
-
-void board_support_ACImpl::handle_switch_three_phases_while_charging(bool& value){
+void board_support_ACImpl::handle_ac_switch_three_phases_while_charging(bool& value){
     // This is not supported by TIDA hardware
 };
 
@@ -248,9 +262,9 @@ void board_support_ACImpl::handle_evse_replug(int& value){
     // This is not supported by TIDA hardware
 };
 
-double board_support_ACImpl::handle_read_pp_ampacity() {
+types::board_support_common::ProximityPilot board_support_ACImpl::handle_ac_read_pp_ampacity() {
     // Due to a HW bug in TIDA rev1 this cannot be implemented
-    return 16;
+    return {types::board_support_common::Ampacity::A_13};
 };
 
 } // namespace board_support
